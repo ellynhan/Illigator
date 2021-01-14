@@ -4,7 +4,7 @@ chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument('headless')
 chrome_options.add_argument('--disable-gpu')
 driver = webdriver.Chrome(executable_path="~PATH~", options=chrome_options)
-driver.get("https://naver.com/")
+driver.get("~~")
 a = driver.find_elements_by_tag_name("a")
 count =0
 for element in a:
