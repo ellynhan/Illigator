@@ -1,51 +1,57 @@
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup as bs
 from urllib.parse import urlparse
+from selenium import webdriver
 
-def compare_banner_link(url1, url2, driver):
-    driver.get(url1)
-    html1 = driver.page_source
-    driver.get(url2)
-    html2 = driver.page_source
-    soup1 = BeautifulSoup(html1, 'html.parser')
-    soup2 = BeautifulSoup(html2, 'html.parser')
-    hrefs1 = soup1.findAll("a")
-    hrefs2 = soup2.findAll("a")
-    net1 = urlparse(url1).netloc
-    net2 = urlparse(url2).netloc
-    external_link_1 = []
-    external_link_2 = []
-    for href in hrefs1:
-        if not ('href' in href.attrs):
-            continue
-        if href.attrs["href"].startswith('/') or urlparse(
-                href.attrs["href"]).netloc == net1:  # internal link start with
-            continue
-        else:  # external link
-            external_link_1.append(href)
+def extract_external_link(url, _driver):
+    external_link = []
 
-    for href in hrefs2:
-        if not ('href' in href.attrs):
-            continue
-        if href.attrs["href"].startswith('/') or urlparse(
-                href.attrs["href"]).netloc == net2:  # internal link start with
-            continue
-        else:  # external link
-            external_link_2.append(href)
+    _driver.get(url)
+    html = driver.page_source
+    soup = bs(html, 'html.parser')
+    a_tags = soup.findAll('a')
+    net = urlparse(url).netloc
 
-    bigger = []
-    smaller = []
-    compare_length = len(external_link_1) >= len(external_link_2)
-    bigger = external_link_1 if compare_length == True else external_link_2
-    smaller = external_link_2 if compare_length == True else external_link_1
+    for tag in a_tags:
+        if not ('href' in tag.attrs):
+            continue
+        if tag.attrs['href'].startswith('/') or urlparse(tag.attrs['href']).netloc == net:
+            continue
+        else:
+            external_link.append(tag.attrs['href'])
 
+    return external_link
+
+
+
+def compare_banner_link(links1, links2):
+    same_link = []
     count = 0
-    for link in smaller:
-        if bigger.__contains__(link):
+    for link in links1:
+        if links2.__contains__(link):
             count += 1
-            
-    result = 0 if count == 0 else count/len(bigger)*100
-    return result 
+            same_link
+
+    print("links1 length: ", len(links1))
+    print("links2 length: ", len(links2))
+    print("count: ", count)
+
+    result = 0 if count == 0 else count / len(links1 if len(links1) < len(links2) else links2) * 100
+    return result
 
 
 if __name__ == "__main__":
-    compare_banner_link("url1", "url2")
+    driver = webdriver.PhantomJS("/usr/local/bin/phantomjs")
+    driver.implicitly_wait(3)
+    ''' or use chrome webdriver. 
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument('headless')
+    chrome_options.add_argument('--disable-gpu')
+    driver = webdriver.Chrome(
+        executable_path="chromedriver_path",
+        options=chrome_options)
+    '''
+    external_link1 = extract_external_link("url1", driver)
+    external_link2 = extract_external_link("url2", driver)
+    print("external_link1: ",external_link1)
+    print("external_link2: ",external_link2)
+    print(compare_banner_link(external_link1, external_link2))
