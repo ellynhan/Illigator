@@ -1,4 +1,4 @@
-import compare_banner_links as banner
+import extractCompareBanners as banner
 import database as db
 
 
