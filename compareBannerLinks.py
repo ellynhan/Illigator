@@ -2,11 +2,14 @@ from bs4 import BeautifulSoup as bs
 from urllib.parse import urlparse
 from selenium import webdriver
 
-def extract_external_link(url, webdriver):
-    external_link = []
+def extract_external_link(url):
+    driver = webdriver.PhantomJS("/usr/local/bin/phantomjs")
+    driver.implicitly_wait(3)
 
-    webdriver.get(url)
-    html = webdriver.page_source
+    external_link = []
+    driver.get(url)
+    html = driver.page_source
+
     soup = bs(html, 'html.parser')
     a_tags = soup.findAll('a')
     net = urlparse(url).netloc
@@ -20,34 +23,33 @@ def extract_external_link(url, webdriver):
             continue
         else:
             external_link.append(tag.attrs['href'])
+    external_link_string = ','.join(external_link)
 
-        string_links = ','.join(external_link)
-        return string_links
-        # return external_link
+    return external_link_string
 
 
-def compare_banner_link(string_links1, string_links2):
-    links1 = string_links1.split(",")
-    links2 = string_links2.split(",")
+def compare_banner_link(src_links, dest_links):
+    source_links = src_links.split(',')
+    destination_links = dest_links.split(',')
 
-    if links1 > links2:
-        links1, links2 = links2, links1
+    # src is small
+    if source_links > destination_links:
+        source_links, destination_links = destination_links, source_links
 
     count = 0
-    for link in links1:
-        if links2.__contains__(link):
+    for link in source_links:
+        if destination_links.__contains__(link):
             count += 1
 
-    result = 0 if count == 0 else count / len(links1) * 100
+    result = 0 if count == 0 else count / len(source_links) * 100
     return result
 
 
 if __name__ == "__main__":
-    driver = webdriver.PhantomJS("/usr/local/bin/phantomjs")
-    driver.implicitly_wait(3)
 
-    external_link2 = extract_external_link("url1", driver)
-    external_link1 = extract_external_link("url2", driver)
+
+    external_link2 = extract_external_link("url1")
+    external_link1 = extract_external_link("url2")
 
 
     print(compare_banner_link(external_link1, external_link2))
